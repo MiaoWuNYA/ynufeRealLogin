@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "云财自动登录",
+  "version": "1.0.0",
+  "description": "云南财经大学统一身份认证自动登录插件",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://idas.ynufe.edu.cn/*", "http://172.16.130.31/*"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [{
+    "matches": ["https://idas.ynufe.edu.cn/authserver/login*"],
+    "js": ["content.js"],
+    "run_at": "document_end"
+  }]
+}

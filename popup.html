@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>云财自动登录设置</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { width: 320px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .container { background: #fff; border-radius: 8px; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #A40000 0%, #c62828 100%); color: #fff; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .version { font-size: 12px; opacity: 0.8; }
+    .content { padding: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; color: #333; margin-bottom: 6px; font-weight: 500; }
+    .form-group input[type="text"], .form-group input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; transition: border-color 0.2s; }
+    .form-group input:focus { outline: none; border-color: #A40000; }
+    .password-wrapper { position: relative; display: flex; align-items: center; }
+    .password-wrapper input { flex: 1; padding-right: 40px; }
+    .toggle-btn { position: absolute; right: 8px; background: none; border: none; cursor: pointer; padding: 4px 8px; font-size: 16px; }
+    .checkbox-label { display: flex; align-items: center; cursor: pointer; }
+    .checkbox-label input { margin-right: 8px; width: 16px; height: 16px; accent-color: #A40000; }
+    .actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn { flex: 1; padding: 10px 16px; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: linear-gradient(135deg, #A40000 0%, #c62828 100%); color: #fff; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+    .btn-secondary:hover { background: #eee; }
+    .status { margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 13px; text-align: center; display: none; }
+    .status.success { display: block; background: #e8f5e9; color: #2e7d32; }
+    .status.error { display: block; background: #ffebee; color: #c62828; }
+    .status.info { display: block; background: #e3f2fd; color: #1565c0; }
+    .footer { padding: 12px 20px; background: #f9f9f9; border-top: 1px solid #eee; }
+    .footer p { font-size: 12px; color: #666; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>云财自动登录</h1>
+      <span class="version">v1.0.0</span>
+    </div>
+    <div class="content">
+      <div class="form-group">
+        <label for="username">学号/工号</label>
+        <input type="text" id="username" placeholder="请输入学号或工号">
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <div class="password-wrapper">
+          <input type="password" id="password" placeholder="请输入密码">
+          <button type="button" id="togglePassword" class="toggle-btn">
+            <span class="eye-icon">👁</span>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="autoLogin" checked>
+          <span>浏览器启动时自动登录</span>
+        </label>
+      </div>
+      <div class="actions">
+        <button id="saveBtn" class="btn btn-primary">保存设置</button>
+        <button id="campusLoginBtn" class="btn btn-secondary">校园网登录</button>
+      </div>
+      <div id="status" class="status"></div>
+    </div>
+    <div class="footer">
+      <p>By云财老华灯</p>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
