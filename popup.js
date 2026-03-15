@@ -66,6 +66,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // 本科教务系统跳转
+  const jwxtBtn = document.getElementById('jwxtBtn');
+  jwxtBtn.addEventListener('click', function() {
+    const url = 'http://idas.ynufe.edu.cn/authserver/login?service=http://xjwis.ynufe.edu.cn/jsxsd/sso.jsp';
+    chrome.tabs.create({ url: url });
+  });
+
   function showStatus(message, type) {
     statusDiv.textContent = message;
     statusDiv.className = 'status ' + type;
