@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "云财自动登录",
+  "version": "1.1.1",
+  "description": "云南财经大学统一身份认证自动登录插件",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "yuncai-autologin@ynufe.edu.cn",
+      "strict_min_version": "109.0"
+    }
+  },
+  "permissions": ["storage", "tabs", "notifications", "webRequest"],
+  "host_permissions": ["https://idas.ynufe.edu.cn/*", "http://172.16.130.31/*", "*://172.16.130.31/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [{
+    "matches": ["https://idas.ynufe.edu.cn/authserver/login*"],
+    "js": ["content.js"],
+    "run_at": "document_end"
+  }]
+}

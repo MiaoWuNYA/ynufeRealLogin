@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图标生成工具</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; padding: 40px; background: #f5f5f5; }
+    h1 { color: #A40000; }
+    .icon-row { display: flex; gap: 30px; margin: 30px 0; flex-wrap: wrap; }
+    .icon-item { text-align: center; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .icon-item canvas { border: 1px solid #ddd; }
+    .icon-item p { margin: 10px 0 0; color: #666; }
+    a { color: #1976d2; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>云财自动登录 - 图标生成工具</h1>
+  <p>点击下载链接保存图标文件</p>
+  <div class="icon-row">
+    <div class="icon-item">
+      <canvas id="icon16" width="16" height="16"></canvas>
+      <p>16x16</p>
+      <a id="download16" download="icon16.png">下载</a>
+    </div>
+    <div class="icon-item">
+      <canvas id="icon48" width="48" height="48"></canvas>
+      <p>48x48</p>
+      <a id="download48" download="icon48.png">下载</a>
+    </div>
+    <div class="icon-item">
+      <canvas id="icon128" width="128" height="128"></canvas>
+      <p>128x128</p>
+      <a id="download128" download="icon128.png">下载</a>
+    </div>
+  </div>
+  <script>
+    function drawIcon(ctx, size) {
+      const scale = size / 128;
+      // 背景渐变
+      const grad = ctx.createLinearGradient(0, 0, size, size);
+      grad.addColorStop(0, '#A40000');
+      grad.addColorStop(1, '#c62828');
+
+      // 圆角矩形背景
+      ctx.beginPath();
+      const r = 20 * scale;
+      ctx.moveTo(r, 0);
+      ctx.lineTo(size - r, 0);
+      ctx.quadraticCurveTo(size, 0, size, r);
+      ctx.lineTo(size, size - r);
+      ctx.quadraticCurveTo(size, size, size - r, size);
+      ctx.lineTo(r, size);
+      ctx.quadraticCurveTo(0, size, 0, size - r);
+      ctx.lineTo(0, r);
+      ctx.quadraticCurveTo(0, 0, r, 0);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // 云字
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${72 * scale}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('云', size / 2, size / 2 + 4 * scale);
+    }
+
+    [16, 48, 128].forEach(size => {
+      const canvas = document.getElementById('icon' + size);
+      const ctx = canvas.getContext('2d');
+      drawIcon(ctx, size);
+      document.getElementById('download' + size).href = canvas.toDataURL('image/png');
+    });
+  </script>
+</body>
+</html>
