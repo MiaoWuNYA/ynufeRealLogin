@@ -1,15 +1,59 @@
-// background.js - Service Worker
-// 严格按照 yunufeNetwork-main/login.py 的逻辑实现
+// background service worker
+// ref: yunufeNetwork-main/login.py
 
-// 校园网配置
+const MIN_CHROME_VERSION = 88; // manifest v3 requirement
+
+// campus network config
 const CAMPUS_CONFIG = {
   serviceIp: 'http://172.16.130.31',
   acId: 7,
   domain: '1- @ynufe'  // 模式1
 };
 
-chrome.runtime.onInstalled.addListener(() => {
+function getBrowserInfo(userAgent) {
+  let browser = 'unknown';
+  let version = 0;
+  let isEdge = false;
+
+  if (userAgent.includes('Edg/')) {
+    isEdge = true;
+    const match = userAgent.match(/Edg\/(\d+)/);
+    if (match) version = parseInt(match[1], 10);
+    browser = 'edge';
+  } else if (userAgent.includes('Chrome/')) {
+    const match = userAgent.match(/Chrome\/(\d+)/);
+    if (match) version = parseInt(match[1], 10);
+    browser = 'chrome';
+  }
+
+  return { browser, version, isEdge, isSupported: version >= MIN_CHROME_VERSION };
+}
+
+chrome.runtime.onInstalled.addListener((details) => {
   console.log('云财自动登录插件已安装');
+
+  const ua = navigator.userAgent;
+  const browserInfo = getBrowserInfo(ua);
+
+  if (!browserInfo.isSupported) {
+    const browserName = browserInfo.browser === 'edge' ? 'Edge' : 'Chrome';
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon128.png',
+      title: '⚠️ 浏览器版本过低',
+      message: `此插件需要 ${browserName} ${MIN_CHROME_VERSION}+ 版本。如果你在彭云二机房，建议使用 Edge 浏览器。`,
+      priority: 2,
+      requireInteraction: true
+    });
+  } else if (details.reason === 'install') {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon128.png',
+      title: '✅ 云财自动登录已安装',
+      message: '点击扩展图标设置学号和密码即可使用',
+      priority: 1
+    });
+  }
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -21,12 +65,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// ============ Python ordat 函数 ============
+// utils
 function ordat(msg, idx) {
   return (msg.length > idx) ? msg.charCodeAt(idx) : 0;
 }
 
-// ============ Python sencode 函数 ============
 function sencode(msg, key) {
   const l = msg.length;
   const pwd = [];
@@ -41,7 +84,6 @@ function sencode(msg, key) {
   return pwd;
 }
 
-// ============ Python lencode 函数 ============
 function lencode(msg, key) {
   const l = msg.length;
   let ll = (l - 1) << 2;
@@ -68,7 +110,7 @@ function lencode(msg, key) {
   return s;
 }
 
-// ============ Python get_xencode 函数 ============
+// xencode encryption
 function get_xencode(msg, key) {
   if (msg === "") {
     return "";
@@ -111,7 +153,7 @@ function get_xencode(msg, key) {
   return lencode(pwd, false);
 }
 
-// ============ Python get_base64 函数 ============
+// custom base64
 function get_base64(s) {
   const _ALPHA = "LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA";
   if (!s) {
@@ -150,7 +192,7 @@ function get_base64(s) {
   return x.join("");
 }
 
-// ============ MD5 实现 ============
+// md5
 function md5(string) {
   function md5cycle(x, k) {
     let a = x[0], b = x[1], c = x[2], d = x[3];
@@ -296,13 +338,10 @@ function md5(string) {
   return hex(md51(string));
 }
 
-// ============ HMAC-MD5 (对应 Python: hmac.new(challenge.encode(), password.encode(), hashlib.md5).hexdigest()) ============
 function hmac_md5(key, message) {
-  // 如果key长度大于64，先hash
   if (key.length > 64) {
     key = md5(key);
   }
-  // 填充到64字节
   while (key.length < 64) {
     key += '\x00';
   }
@@ -318,7 +357,7 @@ function hmac_md5(key, message) {
   return md5(oKey + md5(iKey + message));
 }
 
-// ============ SHA1 ============
+// sha1
 async function sha1(s) {
   const encoder = new TextEncoder();
   const data = encoder.encode(s);
@@ -326,7 +365,6 @@ async function sha1(s) {
   return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// ============ 辅助函数 ============
 function get_callback_id() {
   return 'jQuery' + (Math.floor(Math.random() * 900000000000000000000) + 100000000000000000000) + '_' + Date.now();
 }
@@ -343,7 +381,6 @@ function parse_jsonp(text) {
   return null;
 }
 
-// ============ CampusNetworkLogin 类的 login 方法逻辑 ============
 async function doCampusLogin(username, password) {
   const service_ip = CAMPUS_CONFIG.serviceIp;
   const ac_id = CAMPUS_CONFIG.acId;
@@ -355,7 +392,7 @@ async function doCampusLogin(username, password) {
   console.log('domain:', domain);
 
   try {
-    // 1. get_login_info - 获取IP
+    // get ip from portal
     let ip = '';
     try {
       console.log('尝试获取IP...');
@@ -371,16 +408,14 @@ async function doCampusLogin(username, password) {
           if (config_match) {
             console.log('CONFIG匹配:', config_match[1].substring(0, 200));
             try {
-              // 更安全的JSON处理：替换单引号为双引号，处理可能的格式问题
               let config_str = config_match[1]
-                .replace(/'/g, '"')  // 单引号换双引号
-                .replace(/(\w+):/g, '"$1":');  // key加引号
+                .replace(/'/g, '"')
+                .replace(/(\w+):/g, '"$1":');
               const config = JSON.parse(config_str);
               ip = config.ip || config.IP || '';
               console.log('获取到IP:', ip);
             } catch (e) {
               console.log('解析CONFIG失败，尝试正则提取IP:', e);
-              // 尝试直接用正则提取IP
               const ip_match = portal_text.match(/["']?ip["']?\s*:\s*["'](\d+\.\d+\.\d+\.\d+)["']/);
               if (ip_match) {
                 ip = ip_match[1];
@@ -395,8 +430,7 @@ async function doCampusLogin(username, password) {
       return { success: false, message: '无法连接到校园网服务器，请确保已连接校园网' };
     }
 
-    // 2. 获得真正用户名 - 完全按照Python逻辑
-    // domain_part = (domain.split('@')[-1] if '@' in domain else domain.split(' @')[-1] if ' @' in domain else domain).strip()
+    // build full username
     let domain_part;
     if (domain.includes(' @')) {
       const parts = domain.split(' @');
@@ -412,7 +446,7 @@ async function doCampusLogin(username, password) {
     console.log('完整用户名:', full_username);
     console.log('IP:', ip);
 
-    // 3. get_challenge
+    // get challenge
     const challenge_params = new URLSearchParams({
       callback: get_callback_id(),
       username: full_username,
@@ -442,11 +476,9 @@ async function doCampusLogin(username, password) {
     const challenge = challenge_data.challenge;
     console.log('challenge:', challenge);
 
-    // 4. 计算加密参数
-    // hmd5 = hmac.new(challenge.encode(), password.encode(), hashlib.md5).hexdigest()
+    // encrypt
     const hmd5 = hmac_md5(challenge, password);
 
-    // _encode_user_info
     const info_dict = {
       username: full_username,
       password: password,
@@ -454,18 +486,16 @@ async function doCampusLogin(username, password) {
       acid: String(ac_id),
       enc_ver: "srun_bx1"
     };
-    // info_json = json.dumps(info_dict, separators=(',', ':'))
     const info_json = JSON.stringify(info_dict).replace(/:/g, ':').replace(/,/g, ',');
     const info = "{SRBX1}" + get_base64(get_xencode(info_json, challenge));
 
-    // _get_chksum
-    // s = f"{challenge}{username}{challenge}{hmd5}{challenge}{ac_id}{challenge}{ip}{challenge}{n}{challenge}{type_}{challenge}{info}"
+    // checksum
     const n = '200';
     const type_ = '1';
     const chkstr = `${challenge}${full_username}${challenge}${hmd5}${challenge}${ac_id}${challenge}${ip}${challenge}${n}${challenge}${type_}${challenge}${info}`;
     const chksum = await sha1(chkstr);
 
-    // 5. 登录请求
+    // login request
     const timestamp = Date.now();
     const login_params = new URLSearchParams({
       callback: get_callback_id(),
@@ -497,7 +527,7 @@ async function doCampusLogin(username, password) {
     }
     console.log('login响应:', login_text);
 
-    // 6. 解析响应
+    // parse response
     const login_data = parse_jsonp(login_text.trim());
     if (login_data) {
       const error = login_data.error;
@@ -510,7 +540,7 @@ async function doCampusLogin(username, password) {
       }
     }
 
-    // 尝试文本匹配
+    // fallback text match
     const text_lower = login_text.toLowerCase();
     if (text_lower === 'ok' || text_lower === 'login_ok' || text_lower === 'success' ||
         login_text.includes('登录成功') || login_text.includes('认证成功')) {

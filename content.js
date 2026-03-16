@@ -1,4 +1,4 @@
-// content.js - 云财自动登录
+// auto login for ynufe idas
 
 (function() {
   'use strict';
