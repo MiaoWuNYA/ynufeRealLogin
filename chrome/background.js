@@ -527,6 +527,11 @@ async function doCampusLogin(username, password) {
     }
     console.log('login响应:', login_text);
 
+    // 检查是否已连接校园网（no_response_data_error）
+    if (login_text.includes('no_response_data_error')) {
+      return { success: true, message: '你已连接渠道网，无需登陆' };
+    }
+
     // parse response
     const login_data = parse_jsonp(login_text.trim());
     if (login_data) {

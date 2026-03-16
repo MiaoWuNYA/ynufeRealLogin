@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
         password: password
       });
       if (result.success) {
-        showStatus('校园网登录成功！', 'success');
+        showStatus(result.message || '校园网登录成功！', 'success');
       } else {
         showStatus('登录失败: ' + result.message, 'error');
       }

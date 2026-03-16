@@ -78,11 +78,6 @@ function showBrowserWarning(browserInfo) {
   const content = document.querySelector('.content');
   content.insertBefore(warningDiv, content.firstChild);
 
-  const saveBtn = document.getElementById('saveBtn');
-  const campusLoginBtn = document.getElementById('campusLoginBtn');
-  if (saveBtn) saveBtn.disabled = true;
-  if (campusLoginBtn) campusLoginBtn.disabled = true;
-
   if (statusDiv) {
     statusDiv.textContent = '请升级浏览器后重试';
     statusDiv.className = 'status error';
@@ -94,7 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const usernameInput = document.getElementById('username');
   const passwordInput = document.getElementById('password');
   const saveBtn = document.getElementById('saveBtn');
-  const campusLoginBtn = document.getElementById('campusLoginBtn');
   const togglePassword = document.getElementById('togglePassword');
   const statusDiv = document.getElementById('status');
 
@@ -144,39 +138,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }, function() {
       showStatus('设置已保存', 'success');
     });
-  });
-
-  // campus login via background
-  campusLoginBtn.addEventListener('click', async function() {
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!username || !password) { showStatus('请先填写学号和密码', 'error'); return; }
-
-    showStatus('正在登录校园网...', 'info');
-    campusLoginBtn.disabled = true;
-
-    try {
-      const result = await chrome.runtime.sendMessage({
-        action: 'campusLogin',
-        username: username,
-        password: password
-      });
-      if (result.success) {
-        showStatus('校园网登录成功！', 'success');
-      } else {
-        // handle special error messages
-        let message = result.message;
-        if (message === 'no_response_data_error') {
-          message = '你已连接特殊渠道网络，不可登陆';
-        }
-        showStatus('登录失败: ' + message, 'error');
-      }
-    } catch (e) {
-      showStatus('登录出错: ' + e.message, 'error');
-    } finally {
-      campusLoginBtn.disabled = false;
-    }
   });
 
   // jwxt shortcut
