@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "云财自动登录",
-  "version": "1.1.1",
+  "version": "1.1.4",
   "description": "云南财经大学统一身份认证自动登录插件",
   "browser_specific_settings": {
     "gecko": {
